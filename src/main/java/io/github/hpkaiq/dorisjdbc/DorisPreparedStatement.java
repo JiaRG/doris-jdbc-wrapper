@@ -9,21 +9,34 @@ import java.util.Calendar;
 
 public class DorisPreparedStatement extends DorisStatement implements PreparedStatement {
     private final PreparedStatement delegatePs;
+    private final String sql;
 
-    public DorisPreparedStatement(PreparedStatement delegate, DorisConnection conn) {
+    public DorisPreparedStatement(PreparedStatement delegate, DorisConnection conn, String sql) {
         super(delegate, conn);
         this.delegatePs = delegate;
+        this.sql = sql;
     }
 
 
     @Override
     public ResultSet executeQuery() throws SQLException {
-        return delegatePs.executeQuery();
+        try {
+            return delegatePs.executeQuery();
+        } catch (SQLException e) {
+            DorisTraceLogger.logError("DorisPreparedStatement", "executeQuery | sql=" + sql, e);
+            throw e;
+        }
     }
 
     @Override
     public int executeUpdate() throws SQLException {
-        int count = delegatePs.executeUpdate();
+        int count;
+        try {
+            count = delegatePs.executeUpdate();
+        } catch (SQLException e) {
+            DorisTraceLogger.logError("DorisPreparedStatement", "executeUpdate | sql=" + sql, e);
+            throw e;
+        }
         return count == 0 ? 1 : count;
     }
 
@@ -49,7 +62,12 @@ public class DorisPreparedStatement extends DorisStatement implements PreparedSt
 
     @Override
     public boolean execute() throws SQLException {
-        return delegatePs.execute();
+        try {
+            return delegatePs.execute();
+        } catch (SQLException e) {
+            DorisTraceLogger.logError("DorisPreparedStatement", "execute | sql=" + sql, e);
+            throw e;
+        }
     }
 
     @Override
